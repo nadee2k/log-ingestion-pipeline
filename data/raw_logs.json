@@ -1,0 +1,137 @@
+[
+  {
+    "timestamp": "2026-01-10T14:22:31Z",
+    "service": "auth-service",
+    "level": "ERROR",
+    "endpoint": "/login",
+    "response_time_ms": 842,
+    "status_code": 500,
+    "message": "Authentication failed"
+  },
+  {
+    "timestamp": "2026-01-10T14:23:15Z",
+    "service": "auth-service",
+    "level": "INFO",
+    "endpoint": "/login",
+    "response_time_ms": 234,
+    "status_code": 200,
+    "message": "User authenticated successfully"
+  },
+  {
+    "timestamp": "2026-01-10T14:24:02Z",
+    "service": "payment-service",
+    "level": "ERROR",
+    "endpoint": "/process-payment",
+    "response_time_ms": 1205,
+    "status_code": 500,
+    "message": "Payment gateway timeout"
+  },
+  {
+    "timestamp": "2026-01-10T14:25:18Z",
+    "service": "user-service",
+    "level": "INFO",
+    "endpoint": "/users",
+    "response_time_ms": 156,
+    "status_code": 200,
+    "message": "Retrieved user list"
+  },
+  {
+    "timestamp": "2026-01-10T14:26:45Z",
+    "service": "auth-service",
+    "level": "ERROR",
+    "endpoint": "/register",
+    "response_time_ms": 678,
+    "status_code": 400,
+    "message": "Invalid email format"
+  },
+  {
+    "timestamp": "2026-01-10T14:27:30Z",
+    "service": "payment-service",
+    "level": "INFO",
+    "endpoint": "/process-payment",
+    "response_time_ms": 312,
+    "status_code": 200,
+    "message": "Payment processed successfully"
+  },
+  {
+    "timestamp": "2026-01-10T14:28:12Z",
+    "service": "order-service",
+    "level": "ERROR",
+    "endpoint": "/create-order",
+    "response_time_ms": 945,
+    "status_code": 500,
+    "message": "Database connection error"
+  },
+  {
+    "timestamp": "2026-01-10T14:29:05Z",
+    "service": "auth-service",
+    "level": "INFO",
+    "endpoint": "/login",
+    "response_time_ms": 198,
+    "status_code": 200,
+    "message": "User authenticated successfully"
+  },
+  {
+    "timestamp": "2026-01-10T14:30:22Z",
+    "service": "user-service",
+    "level": "ERROR",
+    "endpoint": "/users/123",
+    "response_time_ms": 523,
+    "status_code": 404,
+    "message": "User not found"
+  },
+  {
+    "timestamp": "2026-01-10T14:31:10Z",
+    "service": "payment-service",
+    "level": "INFO",
+    "endpoint": "/refund",
+    "response_time_ms": 267,
+    "status_code": 200,
+    "message": "Refund processed"
+  },
+  {
+    "timestamp": "2026-01-11T09:15:30Z",
+    "service": "auth-service",
+    "level": "ERROR",
+    "endpoint": "/login",
+    "response_time_ms": 1123,
+    "status_code": 500,
+    "message": "Internal server error"
+  },
+  {
+    "timestamp": "2026-01-11T09:16:45Z",
+    "service": "order-service",
+    "level": "INFO",
+    "endpoint": "/create-order",
+    "response_time_ms": 445,
+    "status_code": 201,
+    "message": "Order created successfully"
+  },
+  {
+    "timestamp": "2026-01-11T09:17:20Z",
+    "service": "payment-service",
+    "level": "ERROR",
+    "endpoint": "/process-payment",
+    "response_time_ms": 890,
+    "status_code": 500,
+    "message": "Insufficient funds"
+  },
+  {
+    "timestamp": "2026-01-11T09:18:05Z",
+    "service": "user-service",
+    "level": "INFO",
+    "endpoint": "/users",
+    "response_time_ms": 178,
+    "status_code": 200,
+    "message": "Retrieved user list"
+  },
+  {
+    "timestamp": "2026-01-11T09:19:12Z",
+    "service": "auth-service",
+    "level": "INFO",
+    "endpoint": "/login",
+    "response_time_ms": 201,
+    "status_code": 200,
+    "message": "User authenticated successfully"
+  }
+]
