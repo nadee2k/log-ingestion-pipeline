@@ -21,7 +21,7 @@ services:
 
   api:
     build:
-      context: .
+      context: ..
       dockerfile: docker/Dockerfile
     container_name: log_pipeline_api
     environment:

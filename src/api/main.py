@@ -7,13 +7,13 @@ from typing import List, Optional
 from datetime import date, datetime
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import JSONResponse
-import psycopg2
-from psycopg2.extras import RealDictCursor
+from sqlalchemy import text
+from sqlalchemy.exc import SQLAlchemyError
 
 # Add parent directory to path for imports
 sys.path.append(str(Path(__file__).parent.parent))
 
-from config.db_config import get_db_connection_string
+from config.db_config import get_db_engine
 from utils.logger import setup_logger
 
 logger = setup_logger(__name__)
@@ -27,7 +27,8 @@ app = FastAPI(
 def get_db_connection():
     """Get database connection."""
     try:
-        return psycopg2.connect(get_db_connection_string())
+        engine = get_db_engine()
+        return engine.connect()
     except Exception as e:
         logger.error(f"Database connection failed: {e}")
         raise HTTPException(status_code=500, detail="Database connection failed")
@@ -53,9 +54,7 @@ async def health_check():
     """Health check endpoint."""
     try:
         conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute("SELECT 1")
-        cursor.close()
+        result = conn.execute(text("SELECT 1"))
         conn.close()
         return {"status": "healthy", "database": "connected"}
     except Exception as e:
@@ -79,37 +78,35 @@ async def get_error_metrics(
     """
     try:
         conn = get_db_connection()
-        cursor = conn.cursor(cursor_factory=RealDictCursor)
         
         query = """
             SELECT log_date, service, error_count
             FROM daily_error_counts
             WHERE 1=1
         """
-        params = []
+        params = {}
         
         if service:
-            query += " AND service = %s"
-            params.append(service)
+            query += " AND service = :service"
+            params['service'] = service
         
         if start_date:
-            query += " AND log_date >= %s"
-            params.append(start_date)
+            query += " AND log_date >= :start_date"
+            params['start_date'] = start_date
         
         if end_date:
-            query += " AND log_date <= %s"
-            params.append(end_date)
+            query += " AND log_date <= :end_date"
+            params['end_date'] = end_date
         
         query += " ORDER BY log_date DESC, error_count DESC"
         
-        cursor.execute(query, params)
-        results = cursor.fetchall()
+        result = conn.execute(text(query), params)
+        results = result.fetchall()
         
-        cursor.close()
         conn.close()
         
         return {
-            "data": [dict(row) for row in results],
+            "data": [dict(row._mapping) for row in results],
             "count": len(results)
         }
     except Exception as e:
@@ -131,29 +128,27 @@ async def get_latency_metrics(
     """
     try:
         conn = get_db_connection()
-        cursor = conn.cursor(cursor_factory=RealDictCursor)
         
         query = """
             SELECT endpoint, avg_response_time_ms, request_count, last_updated
             FROM endpoint_latency
-            WHERE request_count >= %s
+            WHERE request_count >= :min_requests
         """
-        params = [min_requests]
+        params = {'min_requests': min_requests}
         
         if endpoint:
-            query += " AND endpoint = %s"
-            params.append(endpoint)
+            query += " AND endpoint = :endpoint"
+            params['endpoint'] = endpoint
         
         query += " ORDER BY avg_response_time_ms DESC"
         
-        cursor.execute(query, params)
-        results = cursor.fetchall()
+        result = conn.execute(text(query), params)
+        results = result.fetchall()
         
-        cursor.close()
         conn.close()
         
         return {
-            "data": [dict(row) for row in results],
+            "data": [dict(row._mapping) for row in results],
             "count": len(results)
         }
     except Exception as e:
@@ -175,7 +170,6 @@ async def get_service_health(
     """
     try:
         conn = get_db_connection()
-        cursor = conn.cursor(cursor_factory=RealDictCursor)
         
         query = """
             SELECT 
@@ -185,32 +179,31 @@ async def get_service_health(
                 error_count,
                 success_count,
                 avg_response_time_ms,
-                ROUND((error_count::FLOAT / NULLIF(total_requests, 0)) * 100, 2) as error_rate_percent
+                ROUND((error_count * 1.0 / CASE WHEN total_requests = 0 THEN 1 ELSE total_requests END) * 100, 2) as error_rate_percent
             FROM service_health
             WHERE 1=1
         """
-        params = []
+        params = {}
         
         if service:
-            query += " AND service = %s"
-            params.append(service)
+            query += " AND service = :service"
+            params['service'] = service
         
         if log_date:
-            query += " AND log_date = %s"
-            params.append(log_date)
+            query += " AND log_date = :log_date"
+            params['log_date'] = log_date
         else:
-            query += " AND log_date = CURRENT_DATE"
+            query += " AND log_date = DATE('now')"
         
         query += " ORDER BY error_rate_percent DESC"
         
-        cursor.execute(query, params)
-        results = cursor.fetchall()
+        result = conn.execute(text(query), params)
+        results = result.fetchall()
         
-        cursor.close()
         conn.close()
         
         return {
-            "data": [dict(row) for row in results],
+            "data": [dict(row._mapping) for row in results],
             "count": len(results)
         }
     except Exception as e:

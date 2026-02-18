@@ -5,13 +5,13 @@ import json
 import sys
 from pathlib import Path
 from typing import List, Dict, Any
-import psycopg2
-from psycopg2.extras import execute_batch
+from sqlalchemy import text
+from sqlalchemy.exc import SQLAlchemyError
 
 # Add parent directory to path for imports
 sys.path.append(str(Path(__file__).parent.parent))
 
-from config.db_config import get_db_connection_string
+from config.db_config import get_db_engine
 from utils.logger import setup_logger
 
 logger = setup_logger(__name__)
@@ -83,8 +83,8 @@ def ingest_logs(file_path: str, batch_size: int = 100) -> int:
     
     # Connect to database
     try:
-        conn = psycopg2.connect(get_db_connection_string())
-        cursor = conn.cursor()
+        engine = get_db_engine()
+        conn = engine.connect()
     except Exception as e:
         logger.error(f"Failed to connect to database: {e}")
         return 0
@@ -118,14 +118,22 @@ def ingest_logs(file_path: str, batch_size: int = 100) -> int:
         logger.warning(f"Skipped {invalid_count} invalid log entries")
     
     # Batch insert into staging table
-    insert_query = """
-        INSERT INTO staging_logs 
-        (timestamp, service, level, endpoint, response_time_ms, status_code, message)
-        VALUES (%s, %s, %s, %s, %s, %s, %s)
-    """
-    
     try:
-        execute_batch(cursor, insert_query, valid_logs, page_size=batch_size)
+        for log_entry in valid_logs:
+            conn.execute(text("""
+                INSERT INTO staging_logs 
+                (timestamp, service, level, endpoint, response_time_ms, status_code, message)
+                VALUES (:ts, :service, :level, :endpoint, :response_time, :status_code, :message)
+            """), {
+                'ts': log_entry[0],
+                'service': log_entry[1],
+                'level': log_entry[2],
+                'endpoint': log_entry[3],
+                'response_time': log_entry[4],
+                'status_code': log_entry[5],
+                'message': log_entry[6]
+            })
+        
         conn.commit()
         ingested_count = len(valid_logs)
         logger.info(f"Successfully ingested {ingested_count} log entries")
@@ -135,7 +143,6 @@ def ingest_logs(file_path: str, batch_size: int = 100) -> int:
         logger.error(f"Failed to insert logs: {e}")
         return 0
     finally:
-        cursor.close()
         conn.close()
 
 
